@@ -2,6 +2,10 @@
 /* eslint-disable no-console */
 import gulp from 'gulp';
 import babel from 'gulp-babel';
+import notify from 'gulp-notify';
+import browserify from 'browserify';
+import source from 'vinyl-source-stream';
+import buffer from 'vinyl-buffer';
 import uglify from 'gulp-uglify';
 import del from 'del';
 import flow from 'gulp-flowtype';
@@ -26,25 +30,35 @@ const paths = {
   js: 'dist/js',
 };
 
+// コンパイルに失敗した時の挙動
+// デスクトップ通知を送る
+function handleError(err) {
+  var args = Array.prototype.slice.call(arguments);
+  // Send error to notification center with gulp-notify
+  notify.onError({
+    title: "Compile Error",
+    message: err.message
+  }).apply(this, args);
+
+  // Keep gulp from hanging on this task
+  this.emit('end');
+};
+
 const plumberOption = {
-  errorHandler(error) {
-    console.log(error.message);
-    this.emit('end');
+  errorHandler(err) {
+    handleError(err)
   },
 };
 
+// dist内のjsファイルを全削除
 gulp.task('clean', () => del([
   paths.js,
 ]));
 
-gulp.task('build', ['clean', 'pug', 'sass'], () =>
-  gulp.src(paths.srcJs)
-    .pipe(plumber(plumberOption))
-    .pipe(babel())
-    .pipe(uglify())
-    .pipe(gulp.dest(paths.js)),
-);
+// buildタスク
+gulp.task('build', ['clean', 'js', 'pug', 'sass']);
 
+// pugのhtml化
 gulp.task('pug', () =>
   gulp.src(paths.pug)
     .pipe(plumber(plumberOption))
@@ -52,6 +66,7 @@ gulp.task('pug', () =>
     .pipe(gulp.dest(paths.html)),
 );
 
+// sass（scss）のcss化
 gulp.task('sass', () => {
   const processors = [
     cssnext(),
@@ -64,6 +79,19 @@ gulp.task('sass', () => {
     .pipe(gulp.dest(paths.css));
 });
 
+// jsの結合とminifyなど。
+gulp.task('js', () => {
+  var bundler = browserify('./src/js/applications/application.js', { debug: true });
+  return bundler
+    .bundle()
+    .on('error', handleError)
+    .pipe(source('application.js'))
+    .pipe(buffer())
+    .pipe(uglify())
+    .pipe(gulp.dest('./dist/js/'));
+});
+
+// 監視
 gulp.task('watch', () => {
   const watchList = [
     paths.allSrcJs,
@@ -73,8 +101,10 @@ gulp.task('watch', () => {
   gulp.watch(watchList, ['build', 'reload']);
 });
 
+// yarn serverが実行された時に実行される。
 gulp.task('default', ['watch', 'build']);
 
+// $ yarn sever でこれが実行される。
 gulp.task('server', ['default'], () => {
   const serverSetting = {
     server: {
@@ -85,6 +115,7 @@ gulp.task('server', ['default'], () => {
   browserSync(serverSetting);
 });
 
+// ファイルの変更を探知するとブラウザリロード
 gulp.task('reload', () =>
   browserSync.reload(),
 );

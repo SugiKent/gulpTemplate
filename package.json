@@ -17,12 +17,15 @@
     "babel-polyfill": "^6.16.0",
     "babel-preset-env": "^1.6.1",
     "browser-sync": "^2.18.5",
+    "browserify": "^14.5.0",
     "caniuse-db": "^1.0.30000764",
     "gulp": "^3.9.1",
     "gulp-clean-css": "^3.9.0",
-    "gulp-notify": "^2.2.0",
+    "gulp-notify": "^3.0.0",
     "gulp-plumber": "^1.1.0",
-    "gulp-uglify": "^3.0.0"
+    "gulp-uglify": "^3.0.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",
