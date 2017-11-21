@@ -98,6 +98,7 @@ gulp.task('watch', () => {
     paths.allSass,
     paths.allPug,
   ];
+  // jsとsassとpugに変更があったら、buileとreloadを走らせる
   gulp.watch(watchList, ['build', 'reload']);
 });
 
